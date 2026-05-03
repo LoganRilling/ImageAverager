@@ -15,11 +15,13 @@ pub mod img_avg
 
     impl ImageAverager
     {
-        // Hard stop on unrecoverable error
-        fn handle_run_error() -> !
+        // Standard method of error handling
+        fn handle_run_error(&mut self)
         {
-            // No concrete error handler as of right now. Currently just loops to stop the process
-            loop{}
+            println!("Runtime Error encountered! Entering fail state and exiting process...");
+            error!("Runtime Error encountered! Entering fail state and exiting process...");
+            
+            self.fail_state = true;
         }
 
         // Constructor using &str paths
@@ -279,8 +281,32 @@ pub mod img_avg
             }
             else
             {
-                let source_dir = fs::read_dir(self.image_source_path.clone()).unwrap();
-                let source_size: u32 = fs::read_dir(self.image_source_path.clone()).unwrap().count() as u32;
+                let source_dir = match fs::read_dir(self.image_source_path.clone())
+                {
+                    Ok(p) => p,
+                    Err(e) => 
+                    {
+                        error!("ERROR! Failed to read image source directory: {e}");
+                        println!("ERROR! Failed to read image source directory: {e}");
+
+                        Self::handle_run_error(self);
+
+                        return;
+                    }
+                };
+                let source_size: u32 = match fs::read_dir(self.image_source_path.clone())
+                {
+                    Ok(p) => p.count() as u32,
+                    Err(e) => 
+                    {
+                        error!("ERROR! Failed to read image source directory: {e}");
+                        println!("ERROR! Failed to read image source directory: {e}");
+
+                        Self::handle_run_error(self);
+
+                        return;
+                    }
+                };
 
                 // Accumulator image for averaging
                 let mut avg_img: GrayImage = ImageBuffer::new(image_width, image_height);
@@ -296,14 +322,52 @@ pub mod img_avg
                             error!("ERROR! Failed to load file: {e}");
                             println!("ERROR! Failed to load file: {e}");
                         
-                            Self::handle_run_error();
+                            Self::handle_run_error(self);
+
+                        return;
                         }
                     };
                 
                     // Load and decode image
-                    let img = ImageReader::open(file.path().display().to_string()).unwrap()
-                        .with_guessed_format().unwrap().decode().unwrap();
-                    
+                    let img = match ImageReader::open(file.path().display().to_string())
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to load file: {e}");
+                            println!("ERROR! Failed to load file: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
+                    let img = match img.with_guessed_format()
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to guess file format: {e}");
+                            println!("ERROR! Failed to guess file format: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
+                    let img = match img.decode()
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to decode file: {e}");
+                            println!("ERROR! Failed to decode file: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
                     // Convert to grayscale (Luma8)
                     let img = match img.as_luma8()
                     {
@@ -313,7 +377,9 @@ pub mod img_avg
                             error!("ERROR! File could not be used as Luma8!");
                             println!("ERROR! File could not be used as Luma8!");
                         
-                            Self::handle_run_error();
+                            Self::handle_run_error(self);
+
+                        return;
                         }
                     };
                 
@@ -342,7 +408,19 @@ pub mod img_avg
                 let _ = avg_img.save(self.image_output_path.clone() + "/__average__.tiff");
 
 
-                let apply_paths = fs::read_dir(self.image_apply_path.clone()).unwrap();
+                let apply_paths = match fs::read_dir(self.image_apply_path.clone())
+                {
+                    Ok(p) => p,
+                    Err(e) => 
+                    {
+                        error!("ERROR! Failed to read image apply directory: {e}");
+                        println!("ERROR! Failed to read image apply directory: {e}");
+
+                        Self::handle_run_error(self);
+
+                        return;
+                    }
+                };
 
                 // Process apply images
                 for path in apply_paths
@@ -355,14 +433,53 @@ pub mod img_avg
                             error!("ERROR! Failed to load file: {e}");
                             println!("ERROR! Failed to load file: {e}");
                         
-                            Self::handle_run_error();
+                            Self::handle_run_error(self);
+
+                        return;
                         }
                     };
                 
                     // Load and convert image
-                    let img = ImageReader::open(file.path().display().to_string()).unwrap()
-                        .with_guessed_format().unwrap().decode().unwrap();
-                    
+                    let img = match ImageReader::open(file.path().display().to_string())
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to load file: {e}");
+                            println!("ERROR! Failed to load file: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
+                    let img = match img.with_guessed_format()
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to guess file format: {e}");
+                            println!("ERROR! Failed to guess file format: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
+                    let img = match img.decode()
+                    {
+                        Ok(p) => p,
+                        Err(e) => 
+                        {
+                            error!("ERROR! Failed to decode file: {e}");
+                            println!("ERROR! Failed to decode file: {e}");
+                        
+                            Self::handle_run_error(self);
+
+                        return;
+                        }
+                    };
+                    // Convert to grayscale (Luma8)
                     let img = match img.as_luma8()
                     {
                         Some(o) => o,
@@ -371,10 +488,11 @@ pub mod img_avg
                             error!("ERROR! File could not be used as Luma8!");
                             println!("ERROR! File could not be used as Luma8!");
                         
-                            Self::handle_run_error();
+                            Self::handle_run_error(self);
+
+                        return;
                         }
                     };
-                
                 
                     // Output image buffer
                     let mut output_img: GrayImage = ImageBuffer::new(image_width, image_height);
@@ -401,8 +519,23 @@ pub mod img_avg
                         }
                     }
                 
+                    let file_name = file.file_name();
+                    let file_name = match file_name.to_str()
+                    {
+                        Some(o) => o,
+                        None =>
+                        {
+                            error!("ERROR! Could not retrieve file name!");
+                            println!("ERROR! Could not retrieve file name!");
+                        
+                            Self::handle_run_error(self);
+
+                            return;
+                        }
+                    };
+
                     // Build output file path
-                    let output_name = self.image_output_path.clone() + "/" + file.file_name().to_str().unwrap();
+                    let output_name = self.image_output_path.clone() + "/" + file_name;
                 
                     // Save processed image
                     let _ = output_img.save(output_name);        
