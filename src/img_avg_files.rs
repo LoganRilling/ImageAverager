@@ -5,7 +5,7 @@ pub mod img_avg
     use log::error;
 
     // Main struct holding directory paths and state
-    pub struct ImageAverager
+    pub struct ImageAveragerFromFiles
     {
         pub image_source_path: String, // Directory of source images for averaging
         pub image_apply_path: String,  // Directory of images to apply average to
@@ -13,7 +13,7 @@ pub mod img_avg
         fail_state: bool               // Indicates invalid state
     }
 
-    impl ImageAverager
+    impl ImageAveragerFromFiles
     {
         // Standard method of error handling
         fn handle_run_error(&mut self)
@@ -26,7 +26,7 @@ pub mod img_avg
 
         // Constructor using &str paths
         #[allow(dead_code)]
-        pub fn new(image_source_path: &str, image_apply_path: &str, image_output_path: &str) -> ImageAverager
+        pub fn new(image_source_path: &str, image_apply_path: &str, image_output_path: &str) -> ImageAveragerFromFiles
         {
             let mut fail_state = false;
             let mut source_path = "".to_string();
@@ -82,7 +82,7 @@ pub mod img_avg
             };
 
 
-            return ImageAverager 
+            return ImageAveragerFromFiles
             {
                 image_source_path: source_path,
                 image_apply_path: apply_path,
@@ -93,7 +93,7 @@ pub mod img_avg
 
         // Constructor using String references
         #[allow(dead_code)]
-        pub fn new_with_string(image_source_path: &String, image_apply_path: &String, image_output_path: &String) -> ImageAverager
+        pub fn new_with_string(image_source_path: &String, image_apply_path: &String, image_output_path: &String) -> ImageAveragerFromFiles
         {
             let mut fail_state = false;
             let mut source_path = "".to_string();
@@ -149,7 +149,7 @@ pub mod img_avg
             };
 
 
-            return ImageAverager 
+            return ImageAveragerFromFiles
             {
                 image_source_path: source_path,
                 image_apply_path: apply_path,
@@ -268,6 +268,8 @@ pub mod img_avg
             self.fail_state = true;
             return true;
         }
+
+
 
         // Core execution: builds average image and applies subtraction
         #[allow(dead_code)]
